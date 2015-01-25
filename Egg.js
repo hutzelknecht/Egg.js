@@ -11,12 +11,24 @@
  * 		egg.timePretty() // should return 07:14
  * 
  */
-var Egg = function(){};
+var Egg = function(){
+	var el = this._element = document.createElement("div");
+	el.egg = this;
+};
 
 Egg.VERSION = 0.1;
 
 (function(){
 	var E = Egg.prototype;
+	var event;
+	if (document.createEvent) {
+		event = document.createEvent("HTMLEvents");
+		event.initEvent("ready", true, true);
+	} else {
+		event = document.createEventObject();
+		event.eventType = "ready";
+	};
+	event.eventName = "ready";
 
 	E.weight = 58; // Gewichtsklasse (s=50,m=58,l=68,xl=80)
 	E.height = 300; // m üNN (default=300)
@@ -66,5 +78,30 @@ Egg.VERSION = 0.1;
 			return (pad.substring(0, pad.length - str.length) + str);
 		}
 		return padL(this.timeMin()) + ":" + padL(this.timeSec());
+	}
+	
+	// event listener function
+	E.on = function(eventName, fn, scope){
+		scope = scope || this;
+		return this._element.addEventListener(eventName,function(){ return fn.apply(scope, arguments); })
+	}
+	
+	// event trigger function
+	E.fire = function(eventName){
+		var el = this._element;
+		if (document.createEvent) {
+			el.dispatchEvent(event, this);
+		} else {
+			el.fireEvent("ready", event);
+		}
+	}
+	
+	// start
+	E.start = function(){
+		var time = Math.floor(this.time() * 1000);
+		var me = this;
+		
+		setTimeout(function(){ me.fire("ready", me);}, time);
+		
 	}
 })();
